@@ -7,7 +7,7 @@ h1 {
     font-family: 'Courier New', Courier, monospace;
     font-size: 3rem;
     padding-top: 3rem;
-    color: rgb(19, 4, 70);
+    color: rgb(88, 232, 225);
     text-decoration: underline;
     text-decoration-color: #5f7b83;
     text-decoration-thickness: 0.2rem;
@@ -16,7 +16,7 @@ h1 {
 }
 
 body {
-    background-color: #C2EFB3;
+    background-color: #000000;
     text-align: center;
 }
 
@@ -42,15 +42,15 @@ body {
     width: 18vmin;
     border-radius: 1rem;
     border: none;
-    box-shadow: 0 0 1rem #ae98e9;
-    font-size: 8vmin;
+    box-shadow: 0 0 1rem #6bdbdd;
+    font-size: 12vmin;
     background-color: #ffffff;
 }
 
 #reset {
     padding: 1rem;
     font-size: 1.5rem;
-    background-color: #5f7b83;
+    background-color: #3e9daf;
     color: white;
     border-radius: 1rem;
     border: none;
@@ -59,14 +59,14 @@ body {
 #new {
     padding: 1rem;
     font-size: 1.5rem;
-    background-color: #5f7b83;
+    background-color: #3e9daf;
     color: white;
     border-radius: 1rem;
     border: none;
 }
 
 #msg {
-    color: rgb(34, 8, 128);
+    color: rgb(88, 232, 225);
     font-size: 5vmin;
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;

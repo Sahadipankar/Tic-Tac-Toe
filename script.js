@@ -22,10 +22,10 @@ boxes.forEach((box) => {    // Add event listener to each box
         if (box.innerHTML === "") {
             if (turnX) {
                 box.innerHTML = "X";
-                box.style.color = "red";   // X will be blue
+                box.style.color = "#F93D3D";   // X will be blue
             } else {
                 box.innerHTML = "O";
-                box.style.color = "blue";    // O will be red
+                box.style.color = "#3C8BE6";    // O will be red
             }
             turnX = !turnX;
             checkWinner();
