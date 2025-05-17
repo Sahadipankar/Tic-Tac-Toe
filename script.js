@@ -60,7 +60,7 @@ const enableBoxes = () => {         // Function to enable all boxes
 
 
 const showWinner = (winner) => {   // Function to show the winner
-    let player = winner === "X" ? "Player 1" : "Player 2";
+    let player = winner === "X" ? "Player X" : "Player O";
     msg.innerText = `Congratulations, ${player} wins!`;   // Show which player wins
     msgContainer.classList.remove("hide");   // Remove the hide class from the message container
     disableBoxes();   // Disable all boxes
