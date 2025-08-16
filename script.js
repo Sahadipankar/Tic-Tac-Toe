@@ -4,9 +4,11 @@ let newGameBtn = document.querySelector("#new");
 let msgContainer = document.querySelector(".msg-container");
 let msg = document.querySelector("#msg");
 
-let turnX = true;   // Variable to track the current turn (true for X, false for O)
+let turnX = true;
+let gameActive = true;
+let scores = { x: 0, o: 0, draws: 0 };
 
-const winningCombinations = [   // All possible winning combinations
+const winningCombinations = [
     [0, 1, 2],
     [3, 4, 5],
     [6, 7, 8],
@@ -17,93 +19,266 @@ const winningCombinations = [   // All possible winning combinations
     [2, 4, 6]
 ];
 
-boxes.forEach((box) => {    // Add event listener to each box
-    box.addEventListener("click", () => {   // When a box is clicked
-        if (box.innerHTML === "") {
+// Create turn indicator
+const turnIndicator = document.createElement('div');
+turnIndicator.className = 'turn-indicator';
+turnIndicator.innerHTML = `Current Turn: <span class="turn-x">Player X</span>`;
+document.body.appendChild(turnIndicator);
+
+// Create scoreboard
+const scoreboard = document.createElement('div');
+scoreboard.className = 'scoreboard';
+scoreboard.innerHTML = `
+    <div class="score-item">
+        <span class="score-x">Player X:</span>
+        <span id="score-x">0</span>
+    </div>
+    <div class="score-item">
+        <span class="score-o">Player O:</span>
+        <span id="score-o">0</span>
+    </div>
+    <div class="score-item">
+        <span class="score-draw">Draws:</span>
+        <span id="score-draws">0</span>
+    </div>
+`;
+document.body.appendChild(scoreboard);
+
+// Sound effects (using Web Audio API for better browser compatibility)
+const playSound = (frequency, duration = 200) => {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration / 1000);
+    } catch (e) {
+        // Fallback for browsers that don't support Web Audio API
+        console.log('Audio not supported');
+    }
+};
+
+// Update turn indicator
+const updateTurnIndicator = () => {
+    const currentPlayer = turnX ? 'X' : 'O';
+    const className = turnX ? 'turn-x' : 'turn-o';
+    turnIndicator.innerHTML = `Current Turn: <span class="${className}">Player ${currentPlayer}</span>`;
+};
+
+// Update scoreboard
+const updateScoreboard = () => {
+    document.getElementById('score-x').textContent = scores.x;
+    document.getElementById('score-o').textContent = scores.o;
+    document.getElementById('score-draws').textContent = scores.draws;
+};
+
+// Add click animation
+const addClickAnimation = (box) => {
+    box.classList.add('clicked');
+    setTimeout(() => {
+        box.classList.remove('clicked');
+    }, 300);
+};
+
+// Create confetti effect
+const createConfetti = () => {
+    for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            confetti.style.backgroundColor = ['#ff6b6b', '#4ecdc4', '#ffd700', '#45b7d1'][Math.floor(Math.random() * 4)];
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => {
+                confetti.remove();
+            }, 3000);
+        }, i * 50);
+    }
+};
+
+// Highlight winning combination
+const highlightWinningCombination = (combination) => {
+    combination.forEach(index => {
+        boxes[index].classList.add('winning-line');
+    });
+};
+
+boxes.forEach((box, index) => {
+    box.addEventListener("click", () => {
+        if (box.innerHTML === "" && gameActive) {
+            // Add click animation and sound
+            addClickAnimation(box);
+            playSound(turnX ? 800 : 600);
+            
             if (turnX) {
                 box.innerHTML = "X";
-                box.style.color = "#F93D3D";   // X will be blue
+                box.classList.add('x-mark');
             } else {
                 box.innerHTML = "O";
-                box.style.color = "#3D43F9";    // O will be red
+                box.classList.add('o-mark');
             }
+            
             turnX = !turnX;
+            updateTurnIndicator();
             checkWinner();
-        };
+        }
+    });
+    
+    // Add hover sound effect
+    box.addEventListener("mouseenter", () => {
+        if (box.innerHTML === "" && gameActive) {
+            playSound(400, 100);
+        }
     });
 });
 
-
-const resetGame = () => {   // Function to reset the game
-    turnX = true;   // Reset the turn to X
-    enableBoxes();   // Enable all boxes
-    msgContainer.classList.add("hide");   // Hide the message container
+const resetGame = () => {
+    turnX = true;
+    gameActive = true;
+    enableBoxes();
+    msgContainer.classList.add("hide");
+    updateTurnIndicator();
+    
+    // Remove winning line highlights
+    boxes.forEach(box => {
+        box.classList.remove('winning-line');
+    });
+    
+    playSound(300, 150);
 };
 
-
-
-const disableBoxes = () => {   // Function to disable all boxes
-    for (let box of boxes) {   // Loop through each box
-        box.disabled = true;   // Disable the box
-    };
+const disableBoxes = () => {
+    gameActive = false;
+    for (let box of boxes) {
+        box.disabled = true;
+    }
 };
 
-
-
-const enableBoxes = () => {         // Function to enable all boxes
-    for (let box of boxes) {       // Loop through each box
-        box.disabled = false;     // Enable the box
-        box.innerHTML = "";      // Clear the inner HTML of the box
-    };
+const enableBoxes = () => {
+    gameActive = true;
+    for (let box of boxes) {
+        box.disabled = false;
+        box.innerHTML = "";
+        box.classList.remove('x-mark', 'o-mark');
+    }
 };
 
-
-
-const showWinner = (winner) => {   // Function to show the winner
+const showWinner = (winner, winningCombination = null) => {
     let player = winner === "X" ? "Player X" : "Player O";
-    msg.innerText = `Congratulations, ${player} wins!`;   // Show which player wins
-    msgContainer.classList.remove("hide");   // Remove the hide class from the message container
-    disableBoxes();   // Disable all boxes
+    
+    if (winner === "draw") {
+        msg.innerHTML = `🤝 It's a Draw! 🤝<br><small>Great game, try again!</small>`;
+        scores.draws++;
+        playSound(500, 500);
+    } else {
+        msg.innerHTML = `🎉 ${player} Wins! 🎉<br><small>Congratulations!</small>`;
+        scores[winner.toLowerCase()]++;
+        
+        // Highlight winning combination
+        if (winningCombination) {
+            highlightWinningCombination(winningCombination);
+        }
+        
+        // Create confetti effect
+        createConfetti();
+        
+        // Play victory sound
+        playSound(800, 200);
+        setTimeout(() => playSound(1000, 200), 200);
+        setTimeout(() => playSound(1200, 300), 400);
+    }
+    
+    updateScoreboard();
+    msgContainer.classList.remove("hide");
+    disableBoxes();
 };
 
-
-
-const drawGame = () => {   // Function to check for a draw
-    let draw = true;   // Variable to track if the game is a draw
-    for (let box of boxes) {   // Loop through each box
-        if (box.innerHTML === "") {   // If any box is empty
-            draw = false;   // Set draw to false
-            break;   // Break the loop
-        };
-    };
-    if (draw) {   // If the game is a draw
-        msg.innerText = "Game Draw.. Try Again";   // Set the message to show a draw
-        msgContainer.classList.remove("hide");   // Remove the hide class from the message container
-        disableBoxes();   // Disable all boxes
-    };
+const drawGame = () => {
+    let draw = true;
+    for (let box of boxes) {
+        if (box.innerHTML === "") {
+            draw = false;
+            break;
+        }
+    }
+    if (draw && gameActive) {
+        showWinner("draw");
+    }
 };
 
-
-
-const checkWinner = () => {   // Function to check for a winner
-    for (let pattern of winningCombinations) {   // Loop through each winning combination
-
-        let pos1Value = boxes[pattern[0]].innerText;   // Get the inner HTML of the first box in the combination
-        let pos2Value = boxes[pattern[1]].innerText;   // Get the inner HTML of the second box in the combination
-        let pos3Value = boxes[pattern[2]].innerText;   // Get the inner HTML of the third box in the combination
+const checkWinner = () => {
+    for (let pattern of winningCombinations) {
+        let pos1Value = boxes[pattern[0]].innerText;
+        let pos2Value = boxes[pattern[1]].innerText;
+        let pos3Value = boxes[pattern[2]].innerText;
 
         if (
-            pos1Value !== "" &&             // Check if the first box is not empty
-            pos1Value === pos2Value &&      // Check if the first box has the same value as the second box
-            pos2Value === pos3Value         // Check if the second box has the same value as the third box
+            pos1Value !== "" &&
+            pos1Value === pos2Value &&
+            pos2Value === pos3Value &&
+            gameActive
         ) {
-            showWinner(pos1Value);   // Show the winner
-        };
-        drawGame();   // Check for a draw
-    };
+            showWinner(pos1Value, pattern);
+            return;
+        }
+    }
+    drawGame();
 };
 
+// Add keyboard support
+document.addEventListener('keydown', (e) => {
+    if (e.key >= '1' && e.key <= '9' && gameActive) {
+        const index = parseInt(e.key) - 1;
+        if (boxes[index].innerHTML === "") {
+            boxes[index].click();
+        }
+    }
+    
+    if (e.key === 'r' || e.key === 'R') {
+        resetGame();
+    }
+});
 
+// Add button click sounds
+reset.addEventListener("click", () => {
+    playSound(400, 200);
+    resetGame();
+});
 
-newGameBtn.addEventListener("click", resetGame);   // Add event listener to the new game button
-reset.addEventListener("click", resetGame);   // Add event listener to the reset button
+newGameBtn.addEventListener("click", () => {
+    playSound(400, 200);
+    resetGame();
+});
+
+// Initialize the game
+updateTurnIndicator();
+updateScoreboard();
+
+// Add some initial animation delay to boxes
+boxes.forEach((box, index) => {
+    box.style.animationDelay = `${index * 0.1}s`;
+});
+
+// Add welcome message
+setTimeout(() => {
+    if (gameActive && Array.from(boxes).every(box => box.innerHTML === "")) {
+        console.log("🎮 Welcome to Enhanced Tic Tac Toe!");
+        console.log("💡 Tips:");
+        console.log("   • Use number keys 1-9 to play");
+        console.log("   • Press 'R' to reset the game");
+        console.log("   • Hover over boxes for sound effects");
+        console.log("   • Enjoy the animations and effects!");
+    }
+}, 1000);
